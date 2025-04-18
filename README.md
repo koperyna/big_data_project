@@ -129,6 +129,21 @@ top_3_each_genre = df_joined.withColumn("rank", rank().over(windowSpec)).filter(
 top_3_each_genre.select("primaryTitle", "genres", "averageRating", "rank").show(20)
 
 ```
+### Бізнес-питання №8: Топ акторів, які працювали >2 разів з одним режисером
+Використано: filter(), join(), groupBy()
+```
+#актори, які працювали >2 разів з одним режисером
+actors = df_principals.filter(col("category") == "actor").select("tconst", "nconst").withColumnRenamed("nconst", "actor_id")
+directors = df_principals.filter(col("category") == "director").select("tconst", "nconst").withColumnRenamed("nconst", "director_id")
+actor_director = actors.join(directors, on="tconst")
+collab_count = actor_director.groupBy("actor_id", "director_id").count().filter(col("count") > 2)
+collab_with_names = collab_count \
+    .join(df_people.select(col("nconst").alias("actor_id"), col("primaryName").alias("actor_name")),
+          on="actor_id") \
+    .join(df_people.select(col("nconst").alias("director_id"), col("primaryName").alias("director_name")),
+          on="director_id")
+collab_with_names.select("actor_name", "director_name", "count").orderBy(col("count").desc()).show(20)
+```
 ## _Запис результатів_  
 Запис результатів відбувається на Google Диск для кожного з запитів.  
 ```
