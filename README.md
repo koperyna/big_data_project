@@ -124,9 +124,10 @@ avg_length_movies_per_genre.show(20)
 #топ3 фільми за рейтингом у кожному жанрі 
 #WINDOW
 df_joined = df_title.join(df_ratings, "tconst")
-windowSpec = Window.partitionBy("genres").orderBy(col("averageRating").desc())
-top_3_each_genre = df_joined.withColumn("rank", rank().over(windowSpec)).filter(col("rank") <= 3)
-top_3_each_genre.select("primaryTitle", "genres", "averageRating", "rank").show(20)
+df_exploded = df_joined.withColumn("genre", explode(split("genres", ",")))
+windowSpec = Window.partitionBy("genre").orderBy(col("averageRating").desc())
+top_3_each_genre = df_exploded.withColumn("rank", row_number().over(windowSpec)).filter(col("rank") <= 3)
+top_3_each_genre.select("primaryTitle", "genre", "averageRating", "rank").show(20)
 
 ```
 ### Бізнес-питання №8: Топ акторів, які працювали >2 разів з одним режисером
